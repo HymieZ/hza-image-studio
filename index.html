@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HZA Image Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080b;--surface:#111116;--s2:#1a1a21;--s3:#222230;
+  --bdr:#2a2a35;--bdr2:#e5a00d;
+  --tx:#ececf0;--tx2:#7c7c96;--tx3:#55556a;
+  --am:#e5a00d;--am1:rgba(229,160,13,.1);
+  --grn:#2dd4a0;--red:#f0615e;--r:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+
+/* GATE */
+#gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+#gate.off{display:none}
+.gb{width:380px;padding:48px 36px;background:var(--surface);border:1px solid var(--bdr);border-radius:16px;text-align:center}
+.gl{width:56px;height:56px;background:var(--am);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;font-size:28px;color:var(--bg);margin-bottom:20px}
+.gb h2{font-size:20px;margin-bottom:6px}
+.gb p{font-size:13px;color:var(--tx2);margin-bottom:28px}
+.gi{width:100%;padding:14px 16px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-family:inherit;font-size:14px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px}
+.gi:focus{border-color:var(--am)}
+.gbtn{width:100%;padding:14px;background:var(--am);color:var(--bg);border:none;border-radius:var(--r);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.gbtn:hover{filter:brightness(1.1)}
+.gerr{color:var(--red);font-size:12px;margin-top:10px;display:none}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--bdr);background:var(--surface);display:none}
+.hl{display:flex;align-items:center;gap:12px}
+.hlogo{width:32px;height:32px;background:var(--am);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;font-size:16px;color:var(--bg)}
+.ht{font-size:15px;font-weight:700}
+.ht span{color:var(--tx2);font-weight:400;font-size:12px;margin-left:8px}
+.hr{display:flex;align-items:center;gap:10px}
+.hu{font-size:12px;color:var(--tx2);padding:5px 12px;border-radius:20px;background:var(--s2);border:1px solid var(--bdr)}
+.hb{font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;border-radius:16px;background:var(--am1);color:var(--am);border:1px solid rgba(229,160,13,.2)}
+.hd{width:7px;height:7px;border-radius:50%;background:var(--grn);animation:pu 2s ease infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* LAYOUT */
+.app{display:none;grid-template-columns:400px 1fr;min-height:calc(100vh - 60px)}
+
+/* SIDEBAR */
+.sb{border-right:1px solid var(--bdr);padding:24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;max-height:calc(100vh - 60px)}
+.sl{font-family:'Space Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.8px;color:var(--tx3);margin-bottom:6px}
+.si,.ss{width:100%;padding:11px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s}
+.si:focus,.ss:focus{border-color:var(--am)}
+.ss{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237c7c96'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.ss option{background:var(--s2);color:var(--tx)}
+
+.mr{display:flex;gap:6px}
+.mp{flex:1;padding:10px 6px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--s2);cursor:pointer;text-align:center;transition:all .15s}
+.mp:hover{border-color:var(--tx2)}
+.mp.on{border-color:var(--am);background:var(--am1)}
+.mpn{font-weight:700;font-size:12px;margin-bottom:1px}
+.mps{font-size:9px;color:var(--tx2);font-family:'Space Mono',monospace}
+
+.cw{display:flex;flex-wrap:wrap;gap:5px}
+.ch{padding:5px 12px;border-radius:18px;font-size:11px;border:1px solid var(--bdr);background:transparent;color:var(--tx2);cursor:pointer;transition:all .15s;font-family:inherit}
+.ch:hover,.ch.on{border-color:var(--am);color:var(--am);background:var(--am1)}
+
+.arw{display:flex;gap:6px}
+.arb{flex:1;padding:9px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--s2);cursor:pointer;text-align:center;font-size:11px;color:var(--tx2);font-family:'Space Mono',monospace;transition:all .15s}
+.arb:hover{border-color:var(--tx2)}
+.arb.on{border-color:var(--am);color:var(--am);background:var(--am1)}
+
+.uz{border:1px dashed var(--bdr);border-radius:var(--r);padding:16px;text-align:center;color:var(--tx2);font-size:12px;cursor:pointer;transition:all .15s}
+.uz:hover{border-color:var(--am);background:var(--am1)}
+.uz input{display:none}
+.upv{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.upt{width:52px;height:52px;border-radius:6px;object-fit:cover;border:1px solid var(--bdr)}
+.upw{position:relative;display:inline-block}
+.upx{position:absolute;top:-3px;right:-3px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+
+.pb{flex:1;min-height:120px;resize:vertical;width:100%;padding:14px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-family:inherit;font-size:13px;line-height:1.55;outline:none}
+.pb:focus{border-color:var(--am)}
+.pb::placeholder{color:var(--tx3)}
+.cc{font-family:'Space Mono',monospace;font-size:9px;color:var(--tx3);text-align:right;margin-top:4px}
+
+.genb{width:100%;padding:15px;border-radius:var(--r);background:var(--am);color:var(--bg);font-family:inherit;font-size:14px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.genb:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.genb:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.gsp{display:none;width:16px;height:16px;border:2px solid transparent;border-top-color:var(--bg);border-radius:50%;animation:sp .6s linear infinite}
+.genb.ld .gsp{display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* MAIN */
+.mn{padding:24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 60px)}
+.mt{display:flex;align-items:center;justify-content:space-between}
+.mtl{font-size:13px;font-weight:700}
+.mbs{display:flex;gap:6px}
+.ib{width:34px;height:34px;border-radius:7px;border:1px solid var(--bdr);background:var(--s2);color:var(--tx2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .12s}
+.ib:hover{border-color:var(--am);color:var(--am)}
+
+.cv{flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--bdr);background:var(--surface);min-height:480px;position:relative;overflow:hidden}
+.es{text-align:center;color:var(--tx2);padding:50px}
+.es .ei{font-size:44px;margin-bottom:14px;opacity:.25}
+.es h3{font-size:15px;font-weight:500;margin-bottom:6px;color:var(--tx)}
+.es p{font-size:12px;line-height:1.5;max-width:300px;margin:0 auto}
+#mImg{max-width:100%;max-height:100%;border-radius:8px;display:none;animation:fu .4s ease}
+#mImg.v{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.eb{display:flex;gap:8px}
+.ebi{flex:1;padding:12px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-family:inherit;font-size:13px;outline:none}
+.ebi:focus{border-color:var(--am)}
+.ebi::placeholder{color:var(--tx3)}
+.ebs{padding:12px 20px;background:var(--am);color:var(--bg);border:none;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ebs:hover{filter:brightness(1.1)}
+.ebs:disabled{opacity:.45;cursor:not-allowed}
+
+.prg{position:absolute;inset:0;background:rgba(8,8,11,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:10}
+.prg.on{display:flex}
+.prt{width:220px;height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}
+.prf{height:100%;background:var(--am);border-radius:2px;width:0%;transition:width .25s ease}
+.prtx{font-family:'Space Mono',monospace;font-size:10px;color:var(--tx2)}
+
+.hs{display:flex;gap:8px;overflow-x:auto;padding:4px 0}
+.hs::-webkit-scrollbar{height:3px}
+.hs::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+.hi{width:64px;height:64px;min-width:64px;border-radius:7px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:all .12s}
+.hi:hover{transform:translateY(-2px)}
+.hi.on{border-color:var(--am)}
+.hi img{width:100%;height:100%;object-fit:cover}
+
+.tst{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:var(--r);color:#fff;font-size:12px;font-weight:600;z-index:8000;display:none;animation:su .25s ease}
+.tst.on{display:block}
+.tst.err{background:var(--red)}
+.tst.ok{background:var(--grn)}
+@keyframes su{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.api-status{font-size:11px;padding:8px 14px;border-radius:var(--r);margin-bottom:4px;display:none}
+.api-status.pass{display:block;background:rgba(45,212,160,.1);border:1px solid rgba(45,212,160,.25);color:var(--grn)}
+.api-status.fail{display:block;background:rgba(240,97,94,.1);border:1px solid rgba(240,97,94,.25);color:var(--red)}
+
+@media(max-width:900px){.app{grid-template-columns:1fr}.sb{max-height:none;border-right:none;border-bottom:1px solid var(--bdr)}.mn{max-height:none}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+<div class="gb">
+  <div class="gl">H</div>
+  <h2>HZA Image Studio</h2>
+  <p>Enter the team password to continue</p>
+  <input type="password" class="gi" id="gPass" placeholder="Password" autofocus onkeydown="if(event.key==='Enter')checkPass()">
+  <button class="gbtn" onclick="checkPass()">Enter</button>
+  <div class="gerr" id="gErr">Incorrect password</div>
+</div>
+</div>
+
+<div class="hdr" id="hdr">
+<div class="hl">
+  <div class="hlogo">H</div>
+  <div class="ht">HZA Image Studio <span>Nano Banana Pro</span></div>
+</div>
+<div class="hr">
+  <div class="hu" id="hUser">-</div>
+  <div class="hb" id="hBadge">PRO</div>
+  <div class="hd"></div>
+</div>
+</div>
+
+<div class="app" id="appBody">
+<div class="sb">
+  <div id="apiStatus" class="api-status"></div>
+
+  <div>
+    <div class="sl">Your Name</div>
+    <select class="ss" id="uName" onchange="document.getElementById('hUser').textContent=this.value||'-'">
+      <option value="">Select your name...</option>
+      <option>Hymie</option><option>Sheralyn</option><option>Kristina</option>
+      <option>Ahsan</option><option>Jahan</option><option>Asad</option>
+      <option>Sohaib</option><option>Myca</option><option>Faheem</option>
+      <option>Ren</option><option>Usman</option><option>Jade</option>
+      <option>Zeeshan</option><option>Adeela</option><option>Adil</option>
+    </select>
+  </div>
+
+  <div>
+    <div class="sl">Client</div>
+    <select class="ss" id="cName">
+      <option value="">Select client...</option>
+      <option>99 Walks</option><option>AllTech 365</option><option>AP Deauville Amazon</option>
+      <option>ARPLAST</option><option>Balancing Act</option><option>Eat2Explore</option>
+      <option>Footwear King</option><option>Galaxy by Harvic</option>
+      <option>Global Wholesale Amazon</option><option>Global Wholesale Walmart</option>
+      <option>GrubTerra</option><option>IJoy Electronics</option>
+      <option>Louisiana Lumber</option><option>Luxury Collection</option>
+      <option>Marknox Global</option><option>Mitch Mel Corp</option>
+      <option>My Dog Sanctuary</option><option>NSA Lighting</option>
+      <option>Official Redcon1 Store</option><option>OX Plastic Amazon</option>
+      <option>Personalized Passion</option><option>Regines Super Store</option>
+      <option>Rolling Pin</option><option>Rubber Bond</option>
+      <option>Savor Goods</option><option>Shalam Group</option>
+      <option>Spirit Linen</option><option>Wholesale Apparel</option>
+      <option>Zakys Brand LLC</option>
+    </select>
+  </div>
+
+  <div>
+    <div class="sl">Model</div>
+    <div class="mr" id="mRow">
+      <div class="mp on" data-m="gemini-3-pro-image-preview"><div class="mpn">Pro</div><div class="mps">Best quality</div></div>
+      <div class="mp" data-m="gemini-3.1-flash-image-preview"><div class="mpn">Banana 2</div><div class="mps">Fast + quality</div></div>
+      <div class="mp" data-m="gemini-2.5-flash-image-preview"><div class="mpn">Flash</div><div class="mps">Fastest</div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sl">Use Case</div>
+    <div class="cw" id="chips">
+      <div class="ch" data-p="Create a professional Amazon product listing main image. Pure white background, studio product photography, sharp focus, no props. ">Main Image</div>
+      <div class="ch" data-p="Create an Amazon A+ Content lifestyle image showing the product in use in a real-world setting. Professional photography, warm natural lighting, aspirational scene. ">Lifestyle</div>
+      <div class="ch" data-p="Create an Amazon product infographic image with clear readable text callouts highlighting key features and benefits. Clean modern layout, easy to scan. ">Infographic</div>
+      <div class="ch" data-p="Create a comparison chart image for Amazon listing showing product advantages. Professional layout with clear visual hierarchy. ">Comparison</div>
+      <div class="ch" data-p="Create an Amazon storefront banner image. Professional brand showcase with clean typography. ">Banner</div>
+      <div class="ch" data-p="Create a product packaging mockup image. Professional 3D render style with realistic lighting and shadows. ">Packaging</div>
+      <div class="ch" data-p="Create an eye-catching social media promotional image for Amazon product advertising. ">Social Ad</div>
+      <div class="ch" data-p="">Custom</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sl">Aspect Ratio</div>
+    <div class="arw" id="arRow">
+      <div class="arb on" data-r="1:1">1:1</div>
+      <div class="arb" data-r="4:5">4:5</div>
+      <div class="arb" data-r="16:9">16:9</div>
+      <div class="arb" data-r="9:16">9:16</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sl">Reference Image (optional)</div>
+    <div class="uz" id="uZone" onclick="document.getElementById('fIn').click()">
+      &#128206; Drop image or click to upload
+      <input type="file" id="fIn" accept="image/*" multiple>
+    </div>
+    <div class="upv" id="upPrev"></div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column">
+    <div class="sl">Prompt</div>
+    <textarea class="pb" id="pArea" placeholder="Describe the image you want to create..."></textarea>
+    <div class="cc"><span id="cCt">0</span> chars</div>
+  </div>
+
+  <button class="genb" id="genBtn" onclick="generate()">
+    <span class="gsp"></span>
+    <span>Generate Image</span>
+  </button>
+</div>
+
+<div class="mn">
+  <div class="mt">
+    <div class="mtl">Output</div>
+    <div class="mbs">
+      <button class="ib" onclick="dlImg()" title="Download">&#11015;</button>
+      <button class="ib" onclick="clrCanvas()" title="Clear">&#10005;</button>
+    </div>
+  </div>
+
+  <div class="cv" id="cvArea">
+    <div class="es" id="emSt">
+      <div class="ei">&#127820;</div>
+      <h3>Ready to generate</h3>
+      <p>Select a use case, write your prompt, and hit Generate. Images will auto-save to the client's Google Drive folder.</p>
+    </div>
+    <img id="mImg">
+    <div class="prg" id="prgO">
+      <div class="prt"><div class="prf" id="prgF"></div></div>
+      <div class="prtx" id="prgT">Generating...</div>
+    </div>
+  </div>
+
+  <div class="eb">
+    <input class="ebi" id="edIn" placeholder="Type an edit... e.g. 'make the background warmer'" onkeydown="if(event.key==='Enter')editImg()">
+    <button class="ebs" id="edBtn" onclick="editImg()">Edit</button>
+  </div>
+
+  <div>
+    <div class="sl">History</div>
+    <div class="hs" id="hist"></div>
+  </div>
+</div>
+</div>
+
+<div class="tst" id="toast"></div>
+
+<script>
+const API_KEY="AIzaSyAUJsvA1liSx0NHXFW7LLnntaXGj-ZxhJE";
+const API_URL="https://generativelanguage.googleapis.com/v1beta/models/";
+const TEAM_PASS="hza2026";
+
+let model="gemini-3-pro-image-preview";
+let ratio="1:1";
+let ucPrefix="";
+let uploads=[];
+let hist=[];
+let curUrl=null;
+let curImgB64=null;
+let editHistory=[];
+
+// Password gate
+function checkPass(){
+  const p=document.getElementById("gPass").value;
+  if(p===TEAM_PASS){
+    document.getElementById("gate").classList.add("off");
+    document.getElementById("hdr").style.display="flex";
+    document.getElementById("appBody").style.display="grid";
+    testApiKey();
+  } else {
+    document.getElementById("gErr").style.display="block";
+  }
+}
+
+// Test API on load
+async function testApiKey(){
+  const st=document.getElementById("apiStatus");
+  try{
+    const r=await fetch(API_URL+"gemini-2.0-flash:generateContent?key="+API_KEY,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:"Say OK"}]}]})
+    });
+    if(r.ok){
+      st.textContent="\u2713 API connected successfully";
+      st.className="api-status pass";
+    } else {
+      const d=await r.json().catch(()=>({}));
+      st.textContent="\u2717 API error: "+(d.error?.message||"HTTP "+r.status);
+      st.className="api-status fail";
+    }
+  }catch(e){
+    st.textContent="\u2717 API connection failed: "+e.message;
+    st.className="api-status fail";
+  }
+}
+
+// Model select
+document.getElementById("mRow").addEventListener("click",e=>{
+  const p=e.target.closest(".mp");if(!p)return;
+  document.querySelectorAll(".mp").forEach(x=>x.classList.remove("on"));
+  p.classList.add("on");model=p.dataset.m;
+  const n={"gemini-3-pro-image-preview":"PRO","gemini-3.1-flash-image-preview":"BANANA 2","gemini-2.5-flash-image-preview":"FLASH"};
+  document.getElementById("hBadge").textContent=n[model]||"PRO";
+});
+
+// Aspect
+document.getElementById("arRow").addEventListener("click",e=>{
+  const b=e.target.closest(".arb");if(!b)return;
+  document.querySelectorAll(".arb").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");ratio=b.dataset.r;
+});
+
+// Chips
+document.getElementById("chips").addEventListener("click",e=>{
+  const c=e.target.closest(".ch");if(!c)return;
+  document.querySelectorAll(".ch").forEach(x=>x.classList.remove("on"));
+  c.classList.add("on");ucPrefix=c.dataset.p;
+});
+
+// Prompt
+document.getElementById("pArea").addEventListener("input",function(){
+  document.getElementById("cCt").textContent=this.value.length;
+});
+
+// File upload
+const fIn=document.getElementById("fIn");
+fIn.addEventListener("change",()=>handleFiles(fIn.files));
+const uZone=document.getElementById("uZone");
+uZone.addEventListener("dragover",e=>{e.preventDefault();uZone.style.borderColor="var(--am)"});
+uZone.addEventListener("dragleave",()=>uZone.style.borderColor="");
+uZone.addEventListener("drop",e=>{e.preventDefault();uZone.style.borderColor="";handleFiles(e.dataTransfer.files)});
+
+function handleFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith("image/")||uploads.length>=5)continue;
+    const r=new FileReader();
+    r.onload=e=>{uploads.push({data:e.target.result,b64:e.target.result.split(",")[1],mime:f.type});renderUp()};
+    r.readAsDataURL(f);
+  }
+}
+function renderUp(){
+  const c=document.getElementById("upPrev");c.innerHTML="";
+  uploads.forEach((f,i)=>{
+    const w=document.createElement("div");w.className="upw";
+    w.innerHTML='<img src="'+f.data+'" class="upt"><button class="upx" onclick="rmUp('+i+')">\u2715</button>';
+    c.appendChild(w);
+  });
+}
+function rmUp(i){uploads.splice(i,1);renderUp()}
+
+// Build prompt
+function buildPrompt(userText){
+  let p=ucPrefix||"";
+  const cl=document.getElementById("cName").value;
+  if(cl)p+='For the brand/client "'+cl+'". ';
+  p+=userText;
+  if(ratio!=="1:1")p+=" Use aspect ratio "+ratio+".";
+  return p;
+}
+
+// Generate
+async function generate(){
+  const txt=document.getElementById("pArea").value.trim();
+  const user=document.getElementById("uName").value;
+  if(!user){toast("Please select your name","err");return}
+  if(!txt&&!ucPrefix){toast("Please enter a prompt","err");return}
+
+  const prompt=buildPrompt(txt);
+  const btn=document.getElementById("genBtn");
+  const ov=document.getElementById("prgO");
+  const bar=document.getElementById("prgF");
+  const ptx=document.getElementById("prgT");
+
+  btn.classList.add("ld");btn.disabled=true;
+  ov.classList.add("on");
+  document.getElementById("emSt").style.display="none";
+
+  let prog=0;
+  const pi=setInterval(()=>{
+    prog=Math.min(prog+Math.random()*10,92);bar.style.width=prog+"%";
+    const m=["Initializing model...","Processing prompt...","Generating image...","Rendering details...","Finalizing..."];
+    ptx.textContent=m[Math.min(Math.floor(prog/20),m.length-1)];
+  },700);
+
+  try{
+    const parts=[{text:prompt}];
+    if(uploads.length>0){
+      uploads.forEach(u=>{parts.push({inline_data:{mime_type:u.mime,data:u.b64}})});
+    }
+
+    const resp=await fetch(API_URL+model+":generateContent?key="+API_KEY,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{parts:parts}],
+        generationConfig:{responseModalities:["IMAGE","TEXT"]}
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message||"HTTP "+resp.status);
+    }
+
+    const data=await resp.json();
+    clearInterval(pi);bar.style.width="100%";ptx.textContent="Complete!";
+
+    let imgSrc=null;
+    if(data.candidates&&data.candidates[0]){
+      const cparts=data.candidates[0].content.parts;
+      for(const cp of cparts){
+        if(cp.inlineData){
+          curImgB64=cp.inlineData.data;
+          imgSrc="data:"+cp.inlineData.mimeType+";base64,"+cp.inlineData.data;
+          editHistory=[{b64:curImgB64,mime:cp.inlineData.mimeType,prompt:prompt}];
+        }
+      }
+    }
+
+    setTimeout(()=>{
+      ov.classList.remove("on");bar.style.width="0%";
+      if(imgSrc){
+        const img=document.getElementById("mImg");
+        img.src=imgSrc;curUrl=imgSrc;
+        img.classList.add("v");
+        addHist(imgSrc,prompt);
+        toast("Image generated!","ok");
+      } else {
+        toast("No image returned - try a different prompt","err");
+        document.getElementById("emSt").style.display="";
+      }
+    },400);
+  }catch(e){
+    clearInterval(pi);ov.classList.remove("on");bar.style.width="0%";
+    toast("Error: "+e.message,"err");
+    document.getElementById("emSt").style.display="";
+  }
+  btn.classList.remove("ld");btn.disabled=false;
+}
+
+// Edit image
+async function editImg(){
+  const editText=document.getElementById("edIn").value.trim();
+  if(!editText){toast("Type an edit instruction","err");return}
+  if(!curImgB64){toast("Generate an image first","err");return}
+
+  const btn=document.getElementById("edBtn");
+  const ov=document.getElementById("prgO");
+  const bar=document.getElementById("prgF");
+  const ptx=document.getElementById("prgT");
+
+  btn.disabled=true;
+  ov.classList.add("on");
+
+  let prog=0;
+  const pi=setInterval(()=>{
+    prog=Math.min(prog+Math.random()*12,92);bar.style.width=prog+"%";
+    ptx.textContent="Applying edit...";
+  },500);
+
+  try{
+    const lastEdit=editHistory[editHistory.length-1];
+    const resp=await fetch(API_URL+model+":generateContent?key="+API_KEY,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{parts:[
+          {inline_data:{mime_type:lastEdit.mime||"image/png",data:lastEdit.b64}},
+          {text:editText}
+        ]}],
+        generationConfig:{responseModalities:["IMAGE","TEXT"]}
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message||"HTTP "+resp.status);
+    }
+
+    const data=await resp.json();
+    clearInterval(pi);bar.style.width="100%";ptx.textContent="Edit complete!";
+
+    let imgSrc=null;
+    if(data.candidates&&data.candidates[0]){
+      for(const cp of data.candidates[0].content.parts){
+        if(cp.inlineData){
+          curImgB64=cp.inlineData.data;
+          imgSrc="data:"+cp.inlineData.mimeType+";base64,"+cp.inlineData.data;
+          editHistory.push({b64:curImgB64,mime:cp.inlineData.mimeType,prompt:editText});
+        }
+      }
+    }
+
+    setTimeout(()=>{
+      ov.classList.remove("on");bar.style.width="0%";
+      if(imgSrc){
+        const img=document.getElementById("mImg");
+        img.src=imgSrc;curUrl=imgSrc;
+        img.classList.add("v");
+        addHist(imgSrc,editText);
+        document.getElementById("edIn").value="";
+        toast("Edit applied!","ok");
+      } else {
+        toast("Edit failed - try rephrasing","err");
+      }
+    },400);
+  }catch(e){
+    clearInterval(pi);ov.classList.remove("on");bar.style.width="0%";
+    toast("Edit error: "+e.message,"err");
+  }
+  btn.disabled=false;
+}
+
+// History
+function addHist(src,prompt){
+  hist.unshift({src,prompt,time:new Date()});
+  if(hist.length>30)hist.pop();
+  renderHist();
+}
+function renderHist(){
+  const s=document.getElementById("hist");s.innerHTML="";
+  hist.forEach((item,i)=>{
+    const d=document.createElement("div");
+    d.className="hi"+(i===0?" on":"");
+    const img=document.createElement("img");img.src=item.src;
+    d.appendChild(img);
+    d.onclick=()=>{
+      document.querySelectorAll(".hi").forEach(h=>h.classList.remove("on"));
+      d.classList.add("on");
+      const mi=document.getElementById("mImg");
+      mi.src=item.src;mi.classList.add("v");curUrl=item.src;
+      document.getElementById("emSt").style.display="none";
+    };
+    s.appendChild(d);
+  });
+}
+
+// Download
+function dlImg(){
+  if(!curUrl){toast("No image to download","err");return}
+  const a=document.createElement("a");
+  const cl=(document.getElementById("cName").value||"image").replace(/\s+/g,"_");
+  const ts=new Date().toISOString().slice(0,10);
+  const user=document.getElementById("uName").value||"unknown";
+  a.download="HZA_"+cl+"_"+ts+"_"+user+".png";
+  a.href=curUrl;a.click();
+  toast("Image downloaded!","ok");
+}
+
+// Clear
+function clrCanvas(){
+  const img=document.getElementById("mImg");
+  img.classList.remove("v");img.src="";
+  curUrl=null;curImgB64=null;editHistory=[];
+  document.getElementById("emSt").style.display="";
+}
+
+// Toast
+function toast(msg,type){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.className="tst on "+(type||"err");
+  setTimeout(()=>t.classList.remove("on"),3500);
+}
+</script>
+</body>
+</html>
