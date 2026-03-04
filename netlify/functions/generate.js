@@ -17,16 +17,22 @@ exports.handler = async function(event, context) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const { prompt, imageData, mimeType, aspectRatio } = body;
+  const { prompt, imageData, mimeType, aspectRatio, model } = body;
 
   if (!prompt) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing prompt" }) };
   }
 
+  // Default to Nano Banana 2; allow override to Pro
+  const ALLOWED_MODELS = [
+    "gemini-3.1-flash-image-preview",
+    "gemini-3-pro-image-preview"
+  ];
+  const selectedModel = ALLOWED_MODELS.includes(model) ? model : "gemini-3.1-flash-image-preview";
+
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    // Build contents — if editing, include the existing image first
     let contents;
     if (imageData && mimeType) {
       contents = [
@@ -51,12 +57,11 @@ exports.handler = async function(event, context) {
     };
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-image-preview",
+      model: selectedModel,
       contents,
       config,
     });
 
-    // Extract image and text from response
     const parts = response.candidates?.[0]?.content?.parts || [];
     const imagePart = parts.find(p => p.inlineData?.data);
     const textPart = parts.find(p => p.text);
