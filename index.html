@@ -206,8 +206,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="sl">Model</div>
     <div class="mr" id="mRow">
       <div class="mp on" data-m="gemini-3-pro-image-preview"><div class="mpn">Pro</div><div class="mps">Best quality</div></div>
-      <div class="mp" data-m="gemini-3.1-flash-image-preview"><div class="mpn">Banana 2</div><div class="mps">Fast + quality</div></div>
-      <div class="mp" data-m="gemini-2.5-flash-image-preview"><div class="mpn">Flash</div><div class="mps">Fastest</div></div>
     </div>
   </div>
 
@@ -326,8 +324,7 @@ document.getElementById("mRow").addEventListener("click",e=>{
   const p=e.target.closest(".mp");if(!p)return;
   document.querySelectorAll(".mp").forEach(x=>x.classList.remove("on"));
   p.classList.add("on");model=p.dataset.m;
-  const n={"gemini-3-pro-image-preview":"PRO","gemini-3.1-flash-image-preview":"BANANA 2","gemini-2.5-flash-image-preview":"FLASH"};
-  document.getElementById("hBadge").textContent=n[model]||"PRO";
+  document.getElementById("hBadge").textContent="PRO";
 });
 
 // Aspect
