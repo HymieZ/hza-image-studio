@@ -407,20 +407,17 @@ async function generate(){
   },700);
 
   try{
-    const parts=[{text:prompt}];
-    if(uploads.length>0){
-      uploads.forEach(u=>{parts.push({inline_data:{mime_type:u.mime,data:u.b64}})});
-    }
+    // Use first upload as reference image if provided
+    const refImg = uploads.length > 0 ? uploads[0] : null;
 
     const resp=await fetch(PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        model:model,
-        payload:{
-          contents:[{parts:parts}],
-          generationConfig:{responseModalities:["IMAGE","TEXT"]}
-        }
+        prompt:prompt,
+        aspectRatio:ar,
+        imageData: refImg ? refImg.b64 : null,
+        mimeType: refImg ? refImg.mime : null,
       })
     });
 
@@ -430,18 +427,14 @@ async function generate(){
     }
 
     const data=await resp.json();
+    if(data.error) throw new Error(data.error);
     clearInterval(pi);bar.style.width="100%";ptx.textContent="Complete!";
 
     let imgSrc=null;
-    if(data.candidates&&data.candidates[0]){
-      const cparts=data.candidates[0].content.parts;
-      for(const cp of cparts){
-        if(cp.inlineData){
-          curImgB64=cp.inlineData.data;
-          imgSrc="data:"+cp.inlineData.mimeType+";base64,"+cp.inlineData.data;
-          editHistory=[{b64:curImgB64,mime:cp.inlineData.mimeType,prompt:prompt}];
-        }
-      }
+    if(data.imageData){
+      curImgB64=data.imageData;
+      imgSrc="data:"+(data.mimeType||"image/png")+";base64,"+data.imageData;
+      editHistory=[{b64:curImgB64,mime:data.mimeType||"image/png",prompt:prompt}];
     }
 
     setTimeout(()=>{
@@ -491,14 +484,9 @@ async function editImg(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        model:model,
-        payload:{
-          contents:[{parts:[
-            {inline_data:{mime_type:lastEdit.mime||"image/png",data:lastEdit.b64}},
-            {text:editText}
-          ]}],
-          generationConfig:{responseModalities:["IMAGE","TEXT"]}
-        }
+        prompt:editText,
+        imageData:lastEdit.b64,
+        mimeType:lastEdit.mime||"image/png",
       })
     });
 
@@ -508,17 +496,14 @@ async function editImg(){
     }
 
     const data=await resp.json();
+    if(data.error) throw new Error(data.error);
     clearInterval(pi);bar.style.width="100%";ptx.textContent="Edit complete!";
 
     let imgSrc=null;
-    if(data.candidates&&data.candidates[0]){
-      for(const cp of data.candidates[0].content.parts){
-        if(cp.inlineData){
-          curImgB64=cp.inlineData.data;
-          imgSrc="data:"+cp.inlineData.mimeType+";base64,"+cp.inlineData.data;
-          editHistory.push({b64:curImgB64,mime:cp.inlineData.mimeType,prompt:editText});
-        }
-      }
+    if(data.imageData){
+      curImgB64=data.imageData;
+      imgSrc="data:"+(data.mimeType||"image/png")+";base64,"+data.imageData;
+      editHistory.push({b64:curImgB64,mime:data.mimeType||"image/png",prompt:editText});
     }
 
     setTimeout(()=>{
@@ -594,3 +579,4 @@ function toast(msg,type){
 </script>
 </body>
 </html>
+
