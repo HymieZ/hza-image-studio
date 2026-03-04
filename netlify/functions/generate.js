@@ -26,17 +26,21 @@ exports.handler = async function(event, context) {
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    // Build contents array
-    const parts = [];
-    
-    // Add reference image if provided
+    // Build contents — if editing, include the existing image first
+    let contents;
     if (imageData && mimeType) {
-      parts.push({ inlineData: { data: imageData, mimeType } });
+      contents = [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { data: imageData, mimeType } },
+            { text: prompt }
+          ]
+        }
+      ];
+    } else {
+      contents = prompt;
     }
-    
-    parts.push({ text: prompt });
-
-    const contents = [{ role: "user", parts }];
 
     const config = {
       responseModalities: ["IMAGE", "TEXT"],
@@ -52,19 +56,15 @@ exports.handler = async function(event, context) {
       config,
     });
 
-    // Extract image from response
-    const candidate = response.candidates?.[0];
-    if (!candidate) {
-      return { statusCode: 500, body: JSON.stringify({ error: "No candidates returned" }) };
-    }
-
-    const imagePart = candidate.content?.parts?.find(p => p.inlineData?.data);
-    const textPart = candidate.content?.parts?.find(p => p.text);
+    // Extract image and text from response
+    const parts = response.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find(p => p.inlineData?.data);
+    const textPart = parts.find(p => p.text);
 
     if (!imagePart) {
-      return { 
-        statusCode: 500, 
-        body: JSON.stringify({ error: textPart?.text || "No image generated" }) 
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: textPart?.text || "No image generated. Try a different prompt." })
       };
     }
 
@@ -73,7 +73,7 @@ exports.handler = async function(event, context) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         imageData: imagePart.inlineData.data,
-        mimeType: imagePart.inlineData.mimeType,
+        mimeType: imagePart.inlineData.mimeType || "image/png",
         text: textPart?.text || null,
       }),
     };
