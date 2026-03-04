@@ -156,11 +156,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 <div class="hdr" id="hdr">
 <div class="hl">
   <div class="hlogo">H</div>
-  <div class="ht">HZA Image Studio <span>Nano Banana Pro</span></div>
+  <div class="ht">HZA Image Studio <span id="modelLabel">Nano Banana 2</span></div>
 </div>
 <div class="hr">
   <div class="hu" id="hUser">-</div>
-  <div class="hb" id="hBadge">PRO</div>
+  <div class="hb" id="hBadge">NB2</div>
   <div class="hd"></div>
 </div>
 </div>
@@ -325,7 +325,9 @@ document.getElementById("mRow").addEventListener("click",e=>{
   const p=e.target.closest(".mp");if(!p)return;
   document.querySelectorAll(".mp").forEach(x=>x.classList.remove("on"));
   p.classList.add("on");model=p.dataset.m;
-  document.getElementById("hBadge").textContent="PRO";
+  const isNB2 = model === "gemini-3.1-flash-image-preview";
+  document.getElementById("hBadge").textContent = isNB2 ? "NB2" : "PRO";
+  document.getElementById("modelLabel").textContent = isNB2 ? "Nano Banana 2" : "Nano Banana Pro";
 });
 
 // Aspect
