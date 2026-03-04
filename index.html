@@ -205,7 +205,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <div>
     <div class="sl">Model</div>
     <div class="mr" id="mRow">
-      <div class="mp on" data-m="gemini-3-pro-image-preview"><div class="mpn">Pro</div><div class="mps">Best quality</div></div>
+      <div class="mp on" data-m="gemini-3.1-flash-image-preview"><div class="mpn">NB2</div><div class="mps">Fast · default</div></div>
+      <div class="mp" data-m="gemini-3-pro-image-preview"><div class="mpn">Pro</div><div class="mps">Max quality</div></div>
     </div>
   </div>
 
@@ -294,7 +295,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 const PROXY_URL="/.netlify/functions/generate";
 const TEAM_PASS="hza2026";
 
-let model="gemini-3-pro-image-preview";
+let model="gemini-3.1-flash-image-preview";
 let ratio="1:1";
 let ucPrefix="";
 let uploads=[];
@@ -416,6 +417,7 @@ async function generate(){
       body:JSON.stringify({
         prompt:prompt,
         aspectRatio:ratio,
+        model:model,
         imageData: refImg ? refImg.b64 : null,
         mimeType: refImg ? refImg.mime : null,
       })
@@ -487,6 +489,7 @@ async function editImg(){
         prompt:editText,
         imageData:lastEdit.b64,
         mimeType:lastEdit.mime||"image/png",
+        model:model,
       })
     });
 
@@ -579,4 +582,5 @@ function toast(msg,type){
 </script>
 </body>
 </html>
+
 
