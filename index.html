@@ -325,7 +325,7 @@ async function testApiKey(){
     const r=await fetch(PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"gemini-2.0-flash",payload:{contents:[{parts:[{text:"Say OK"}]}]}})
+      body:JSON.stringify({model:"gemini-2.5-flash-preview-04-17",payload:{contents:[{parts:[{text:"Say OK"}]}]}})
     });
     if(r.ok){
       st.textContent="\u2713 API connected successfully";
