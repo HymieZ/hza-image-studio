@@ -415,7 +415,7 @@ async function generate(){
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         prompt:prompt,
-        aspectRatio:ar,
+        aspectRatio:ratio,
         imageData: refImg ? refImg.b64 : null,
         mimeType: refImg ? refImg.mime : null,
       })
