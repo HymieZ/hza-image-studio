@@ -293,8 +293,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 <div class="tst" id="toast"></div>
 
 <script>
-const API_KEY="AIzaSyAUJsvA1liSx0NHXFW7LLnntaXGj-ZxhJE";
-const API_URL="https://generativelanguage.googleapis.com/v1beta/models/";
+const PROXY_URL="/.netlify/functions/generate";
 const TEAM_PASS="hza2026";
 
 let model="gemini-3-pro-image-preview";
@@ -323,10 +322,10 @@ function checkPass(){
 async function testApiKey(){
   const st=document.getElementById("apiStatus");
   try{
-    const r=await fetch(API_URL+"gemini-2.0-flash:generateContent?key="+API_KEY,{
+    const r=await fetch(PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{parts:[{text:"Say OK"}]}]})
+      body:JSON.stringify({model:"gemini-2.0-flash",payload:{contents:[{parts:[{text:"Say OK"}]}]}})
     });
     if(r.ok){
       st.textContent="\u2713 API connected successfully";
@@ -436,12 +435,15 @@ async function generate(){
       uploads.forEach(u=>{parts.push({inline_data:{mime_type:u.mime,data:u.b64}})});
     }
 
-    const resp=await fetch(API_URL+model+":generateContent?key="+API_KEY,{
+    const resp=await fetch(PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        contents:[{parts:parts}],
-        generationConfig:{responseModalities:["IMAGE","TEXT"]}
+        model:model,
+        payload:{
+          contents:[{parts:parts}],
+          generationConfig:{responseModalities:["IMAGE","TEXT"]}
+        }
       })
     });
 
@@ -508,15 +510,18 @@ async function editImg(){
 
   try{
     const lastEdit=editHistory[editHistory.length-1];
-    const resp=await fetch(API_URL+model+":generateContent?key="+API_KEY,{
+    const resp=await fetch(PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        contents:[{parts:[
-          {inline_data:{mime_type:lastEdit.mime||"image/png",data:lastEdit.b64}},
-          {text:editText}
-        ]}],
-        generationConfig:{responseModalities:["IMAGE","TEXT"]}
+        model:model,
+        payload:{
+          contents:[{parts:[
+            {inline_data:{mime_type:lastEdit.mime||"image/png",data:lastEdit.b64}},
+            {text:editText}
+          ]}],
+          generationConfig:{responseModalities:["IMAGE","TEXT"]}
+        }
       })
     });
 
