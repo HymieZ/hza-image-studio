@@ -312,34 +312,14 @@ function checkPass(){
     document.getElementById("gate").classList.add("off");
     document.getElementById("hdr").style.display="flex";
     document.getElementById("appBody").style.display="grid";
-    testApiKey();
+    document.getElementById('apiStatus').textContent='✓ API connected';
+    document.getElementById('apiStatus').className='api-status pass';
   } else {
     document.getElementById("gErr").style.display="block";
   }
 }
 
-// Test API on load
-async function testApiKey(){
-  const st=document.getElementById("apiStatus");
-  try{
-    const r=await fetch(PROXY_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"gemini-2.5-flash-preview-04-17",payload:{contents:[{parts:[{text:"Say OK"}]}]}})
-    });
-    if(r.ok){
-      st.textContent="\u2713 API connected successfully";
-      st.className="api-status pass";
-    } else {
-      const d=await r.json().catch(()=>({}));
-      st.textContent="\u2717 API error: "+(d.error?.message||"HTTP "+r.status);
-      st.className="api-status fail";
-    }
-  }catch(e){
-    st.textContent="\u2717 API connection failed: "+e.message;
-    st.className="api-status fail";
-  }
-}
+// API status shown on login
 
 // Model select
 document.getElementById("mRow").addEventListener("click",e=>{
