@@ -1,7 +1,6 @@
-const https = require("https");
+const { GoogleGenAI } = require("@google/genai");
 
 exports.handler = async function(event, context) {
-  // Only allow POST
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
@@ -18,33 +17,71 @@ exports.handler = async function(event, context) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const model = body.model || "gemini-3-pro-image-preview";
-  const payload = body.payload;
+  const { prompt, imageData, mimeType, aspectRatio } = body;
 
-  if (!payload) {
-    return { statusCode: 400, body: JSON.stringify({ error: "Missing payload" }) };
+  if (!prompt) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Missing prompt" }) };
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Build contents array
+    const parts = [];
+    
+    // Add reference image if provided
+    if (imageData && mimeType) {
+      parts.push({ inlineData: { data: imageData, mimeType } });
+    }
+    
+    parts.push({ text: prompt });
+
+    const contents = [{ role: "user", parts }];
+
+    const config = {
+      responseModalities: ["IMAGE", "TEXT"],
+      imageConfig: {
+        aspectRatio: aspectRatio || "1:1",
+        imageSize: "1K",
+      },
+    };
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-pro-image-preview",
+      contents,
+      config,
     });
 
-    const data = await response.json();
+    // Extract image from response
+    const candidate = response.candidates?.[0];
+    if (!candidate) {
+      return { statusCode: 500, body: JSON.stringify({ error: "No candidates returned" }) };
+    }
+
+    const imagePart = candidate.content?.parts?.find(p => p.inlineData?.data);
+    const textPart = candidate.content?.parts?.find(p => p.text);
+
+    if (!imagePart) {
+      return { 
+        statusCode: 500, 
+        body: JSON.stringify({ error: textPart?.text || "No image generated" }) 
+      };
+    }
 
     return {
-      statusCode: response.status,
+      statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        imageData: imagePart.inlineData.data,
+        mimeType: imagePart.inlineData.mimeType,
+        text: textPart?.text || null,
+      }),
     };
+
   } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: err.message }),
     };
   }
 };
