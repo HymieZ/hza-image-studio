@@ -1,0 +1,7 @@
+{
+  "name": "hza-image-studio",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/genai": "^1.0.0"
+  }
+}
