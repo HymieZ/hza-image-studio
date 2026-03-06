@@ -229,8 +229,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="arw" id="arRow">
       <div class="arb on" data-r="1:1">1:1</div>
       <div class="arb" data-r="4:5">4:5</div>
+      <div class="arb" data-r="4:3">4:3</div>
       <div class="arb" data-r="16:9">16:9</div>
       <div class="arb" data-r="9:16">9:16</div>
+    </div>
+    <div class="sl" style="margin-top:10px">Premium A+ Content</div>
+    <div class="arw" id="arRowAplus">
+      <div class="arb" data-r="16:9" data-label="A+ Desktop">A+ Desktop<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">1464×600</span></div>
+      <div class="arb" data-r="4:3" data-label="A+ Mobile">A+ Mobile<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">600×450</span></div>
     </div>
   </div>
 
@@ -336,6 +342,11 @@ document.getElementById("arRow").addEventListener("click",e=>{
   document.querySelectorAll(".arb").forEach(x=>x.classList.remove("on"));
   b.classList.add("on");ratio=b.dataset.r;
 });
+document.getElementById("arRowAplus").addEventListener("click",e=>{
+  const b=e.target.closest(".arb");if(!b)return;
+  document.querySelectorAll(".arb").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");ratio=b.dataset.r;
+});
 
 // Chips
 document.getElementById("chips").addEventListener("click",e=>{
@@ -381,7 +392,11 @@ function buildPrompt(userText){
   const cl=document.getElementById("cName").value;
   if(cl)p+='For the brand/client "'+cl+'". ';
   p+=userText;
-  if(ratio!=="1:1")p+=" Use aspect ratio "+ratio+".";
+  const activeBtn=document.querySelector(".arb.on");
+  const aplusLabel=activeBtn?activeBtn.dataset.label:"";
+  if(aplusLabel==="A+ Desktop")p+=" Format as a wide banner image for Amazon Premium A+ Content desktop module (1464x600 pixels). Wide horizontal composition, no critical content at edges.";
+  else if(aplusLabel==="A+ Mobile")p+=" Format for Amazon Premium A+ Content mobile module (600x450 pixels). Compact composition optimized for small screens.";
+  else if(ratio!=="1:1")p+=" Use aspect ratio "+ratio+".";
   return p;
 }
 
