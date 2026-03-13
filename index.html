@@ -437,6 +437,8 @@ async function generate(){
         model:model,
         imageData: refImg ? refImg.b64 : null,
         mimeType: refImg ? refImg.mime : null,
+        userName:document.getElementById("uName").value||"unknown",
+        clientName:document.getElementById("cName").value||"unknown",
       })
     });
 
@@ -507,6 +509,8 @@ async function editImg(){
         imageData:lastEdit.b64,
         mimeType:lastEdit.mime||"image/png",
         model:model,
+        userName:document.getElementById("uName").value||"unknown",
+        clientName:document.getElementById("cName").value||"unknown",
       })
     });
 

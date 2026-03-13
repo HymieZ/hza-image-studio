@@ -17,7 +17,7 @@ exports.handler = async function(event, context) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const { prompt, imageData, mimeType, aspectRatio, model } = body;
+  const { prompt, imageData, mimeType, aspectRatio, model, userName, clientName } = body;
 
   if (!prompt) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing prompt" }) };
@@ -31,6 +31,11 @@ exports.handler = async function(event, context) {
   const selectedModel = ALLOWED_MODELS.includes(model)
     ? model
     : "gemini-3.1-flash-image-preview";
+
+  // ── Usage log ──
+  const ts = new Date().toISOString();
+  const promptSnip = (prompt || "").substring(0, 120).replace(/\n/g, " ");
+  console.log(`[USAGE] ${ts} | user=${userName || "unknown"} | client=${clientName || "unknown"} | model=${selectedModel} | hasImage=${!!imageData} | prompt="${promptSnip}"`);
 
   try {
     const ai = new GoogleGenAI({ apiKey });
