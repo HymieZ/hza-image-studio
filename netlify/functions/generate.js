@@ -17,7 +17,7 @@ exports.handler = async function(event, context) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const { prompt, imageData, mimeType, aspectRatio, model, userName, clientName } = body;
+  const { prompt, imageData, mimeType, aspectRatio, model, userName, clientName, imageSize } = body;
 
   if (!prompt) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing prompt" }) };
@@ -32,10 +32,14 @@ exports.handler = async function(event, context) {
     ? model
     : "gemini-3.1-flash-image-preview";
 
+  // Whitelist valid image sizes
+  const ALLOWED_SIZES = ["0.5K", "1K", "2K", "4K"];
+  const selectedSize = ALLOWED_SIZES.includes(imageSize) ? imageSize : "1K";
+
   // ── Usage log ──
   const ts = new Date().toISOString();
   const promptSnip = (prompt || "").substring(0, 120).replace(/\n/g, " ");
-  console.log(`[USAGE] ${ts} | user=${userName || "unknown"} | client=${clientName || "unknown"} | model=${selectedModel} | hasImage=${!!imageData} | prompt="${promptSnip}"`);
+  console.log(`[USAGE] ${ts} | user=${userName || "unknown"} | client=${clientName || "unknown"} | model=${selectedModel} | size=${selectedSize} | hasImage=${!!imageData} | prompt="${promptSnip}"`);
 
   try {
     const ai = new GoogleGenAI({ apiKey });
@@ -60,7 +64,7 @@ exports.handler = async function(event, context) {
       responseModalities: ["IMAGE", "TEXT"],
       imageConfig: {
         aspectRatio: aspectRatio || "1:1",
-        imageSize: "1K",
+        imageSize: selectedSize,
       },
     };
 
