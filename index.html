@@ -227,16 +227,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <div>
     <div class="sl">Aspect Ratio</div>
     <div class="arw" id="arRow">
-      <div class="arb on" data-r="1:1">1:1</div>
+      <div class="arb on" data-r="1:1" data-w="2000" data-h="2000">1:1<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">2000×2000</span></div>
       <div class="arb" data-r="4:5">4:5</div>
       <div class="arb" data-r="4:3">4:3</div>
       <div class="arb" data-r="16:9">16:9</div>
       <div class="arb" data-r="9:16">9:16</div>
     </div>
-    <div class="sl" style="margin-top:10px">Premium A+ Content</div>
+    <div class="sl" style="margin-top:10px">Amazon Dimensions</div>
     <div class="arw" id="arRowAplus">
-      <div class="arb" data-r="16:9" data-label="A+ Desktop">A+ Desktop<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">1464×600</span></div>
-      <div class="arb" data-r="4:3" data-label="A+ Mobile">A+ Mobile<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">600×450</span></div>
+      <div class="arb" data-r="16:9" data-label="A+ Desktop" data-w="1464" data-h="600">A+ Desktop<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">1464×600</span></div>
+      <div class="arb" data-r="4:3" data-label="A+ Mobile" data-w="600" data-h="450">A+ Mobile<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">600×450</span></div>
     </div>
   </div>
 
@@ -303,6 +303,7 @@ const TEAM_PASS="hza2026";
 
 let model="gemini-3.1-flash-image-preview";
 let ratio="1:1";
+let targetDims=null; // {w,h} for exact pixel output, null=no resize
 let ucPrefix="";
 let uploads=[];
 let hist=[];
@@ -337,15 +338,16 @@ document.getElementById("mRow").addEventListener("click",e=>{
 });
 
 // Aspect
-document.getElementById("arRow").addEventListener("click",e=>{
-  const b=e.target.closest(".arb");if(!b)return;
+function selectAR(b){
   document.querySelectorAll(".arb").forEach(x=>x.classList.remove("on"));
   b.classList.add("on");ratio=b.dataset.r;
+  targetDims=(b.dataset.w&&b.dataset.h)?{w:parseInt(b.dataset.w),h:parseInt(b.dataset.h)}:null;
+}
+document.getElementById("arRow").addEventListener("click",e=>{
+  const b=e.target.closest(".arb");if(!b)return;selectAR(b);
 });
 document.getElementById("arRowAplus").addEventListener("click",e=>{
-  const b=e.target.closest(".arb");if(!b)return;
-  document.querySelectorAll(".arb").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");ratio=b.dataset.r;
+  const b=e.target.closest(".arb");if(!b)return;selectAR(b);
 });
 
 // Chips
@@ -386,16 +388,41 @@ function renderUp(){
 }
 function rmUp(i){uploads.splice(i,1);renderUp()}
 
+// Resize/crop image to exact pixel dimensions using canvas
+function resizeImage(b64,mime,tw,th){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const sw=img.width,sh=img.height;
+      const targetAR=tw/th, srcAR=sw/sh;
+      let sx=0,sy=0,cw=sw,ch=sh;
+      if(srcAR>targetAR){
+        // source is wider — crop sides
+        cw=Math.round(sh*targetAR);sx=Math.round((sw-cw)/2);
+      } else if(srcAR<targetAR){
+        // source is taller — crop top/bottom
+        ch=Math.round(sw/targetAR);sy=Math.round((sh-ch)/2);
+      }
+      const c=document.createElement("canvas");
+      c.width=tw;c.height=th;
+      const ctx=c.getContext("2d");
+      ctx.drawImage(img,sx,sy,cw,ch,0,0,tw,th);
+      const outB64=c.toDataURL("image/png").split(",")[1];
+      resolve({b64:outB64,dataUrl:c.toDataURL("image/png")});
+    };
+    img.src="data:"+mime+";base64,"+b64;
+  });
+}
+
 // Build prompt
 function buildPrompt(userText){
   let p=ucPrefix||"";
-  const cl=document.getElementById("cName").value;
-  if(cl)p+='For the brand/client "'+cl+'". ';
+  p+="DO NOT include any brand name, client name, company name, or text watermarks in the image. ";
   p+=userText;
   const activeBtn=document.querySelector(".arb.on");
   const aplusLabel=activeBtn?activeBtn.dataset.label:"";
-  if(aplusLabel==="A+ Desktop")p+=" Format as a wide banner image for Amazon Premium A+ Content desktop module (1464x600 pixels). Wide horizontal composition, no critical content at edges.";
-  else if(aplusLabel==="A+ Mobile")p+=" Format for Amazon Premium A+ Content mobile module (600x450 pixels). Compact composition optimized for small screens.";
+  if(aplusLabel==="A+ Desktop")p+=" Format as an ultra-wide banner image for Amazon Premium A+ Content desktop. Extremely wide horizontal composition with all important content centered in the middle third of the frame. Leave generous safe margins at top and bottom edges.";
+  else if(aplusLabel==="A+ Mobile")p+=" Format for Amazon Premium A+ Content mobile module. Compact composition with all key elements centered, optimized for small screens.";
   else if(ratio!=="1:1")p+=" Use aspect ratio "+ratio+".";
   return p;
 }
@@ -451,25 +478,37 @@ async function generate(){
     if(data.error) throw new Error(data.error);
     clearInterval(pi);bar.style.width="100%";ptx.textContent="Complete!";
 
-    let imgSrc=null;
-    if(data.imageData){
-      curImgB64=data.imageData;
-      imgSrc="data:"+(data.mimeType||"image/png")+";base64,"+data.imageData;
-      editHistory=[{b64:curImgB64,mime:data.mimeType||"image/png",prompt:prompt}];
+    if(!data.imageData){
+      clearInterval(pi);ov.classList.remove("on");bar.style.width="0%";
+      toast("No image returned - try a different prompt","err");
+      document.getElementById("emSt").style.display="";
+      btn.classList.remove("ld");btn.disabled=false;
+      return;
     }
+
+    let finalB64=data.imageData;
+    let finalMime=data.mimeType||"image/png";
+    let imgSrc="data:"+finalMime+";base64,"+finalB64;
+
+    // Post-process: crop/resize to exact pixel dimensions if set
+    if(targetDims){
+      ptx.textContent="Resizing to "+targetDims.w+"×"+targetDims.h+"...";
+      const resized=await resizeImage(finalB64,finalMime,targetDims.w,targetDims.h);
+      finalB64=resized.b64;
+      finalMime="image/png";
+      imgSrc=resized.dataUrl;
+    }
+
+    curImgB64=finalB64;
+    editHistory=[{b64:curImgB64,mime:finalMime,prompt:prompt}];
 
     setTimeout(()=>{
       ov.classList.remove("on");bar.style.width="0%";
-      if(imgSrc){
-        const img=document.getElementById("mImg");
-        img.src=imgSrc;curUrl=imgSrc;
-        img.classList.add("v");
-        addHist(imgSrc,prompt);
-        toast("Image generated!","ok");
-      } else {
-        toast("No image returned - try a different prompt","err");
-        document.getElementById("emSt").style.display="";
-      }
+      const img=document.getElementById("mImg");
+      img.src=imgSrc;curUrl=imgSrc;
+      img.classList.add("v");
+      addHist(imgSrc,prompt);
+      toast("Image generated! "+(targetDims?targetDims.w+"×"+targetDims.h:""),"ok");
     },400);
   }catch(e){
     clearInterval(pi);ov.classList.remove("on");bar.style.width="0%";
