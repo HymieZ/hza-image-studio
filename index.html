@@ -205,7 +205,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <div>
     <div class="sl">Model</div>
     <div class="mr" id="mRow">
-      <div class="mp on" data-m="gemini-3.1-flash-image-preview"><div class="mpn">NB2</div><div class="mps">Fast · default</div></div>
+      <div class="mp on" data-m="gemini-3.1-flash-image-preview"><div class="mpn">NB2</div><div class="mps">Fast &middot; default</div></div>
       <div class="mp" data-m="gemini-3-pro-image-preview"><div class="mpn">Pro</div><div class="mps">Max quality</div></div>
     </div>
   </div>
@@ -227,7 +227,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <div>
     <div class="sl">Aspect Ratio</div>
     <div class="arw" id="arRow">
-      <div class="arb on" data-r="1:1" data-w="2000" data-h="2000">1:1<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">2000×2000</span></div>
+      <div class="arb on" data-r="1:1" data-w="2000" data-h="2000">1:1<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">2000&times;2000</span></div>
       <div class="arb" data-r="4:5">4:5</div>
       <div class="arb" data-r="4:3">4:3</div>
       <div class="arb" data-r="16:9">16:9</div>
@@ -235,8 +235,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     </div>
     <div class="sl" style="margin-top:10px">Amazon Dimensions</div>
     <div class="arw" id="arRowAplus">
-      <div class="arb" data-r="16:9" data-label="A+ Desktop" data-w="1464" data-h="600">A+ Desktop<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">1464×600</span></div>
-      <div class="arb" data-r="4:3" data-label="A+ Mobile" data-w="600" data-h="450">A+ Mobile<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">600×450</span></div>
+      <div class="arb" data-r="16:9" data-label="A+ Desktop" data-w="1464" data-h="600">A+ Desktop<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">1464&times;600</span></div>
+      <div class="arb" data-r="4:3" data-label="A+ Mobile" data-w="600" data-h="450">A+ Mobile<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">600&times;450</span></div>
+      <div class="arb" data-r="16:9" data-label="Safe Zone" data-w="1200" data-h="628">Safe Zone<span style="display:block;font-size:8px;opacity:.6;margin-top:2px">1200&times;628</span></div>
     </div>
   </div>
 
@@ -318,7 +319,7 @@ function checkPass(){
     document.getElementById("gate").classList.add("off");
     document.getElementById("hdr").style.display="flex";
     document.getElementById("appBody").style.display="grid";
-    document.getElementById('apiStatus').textContent='✓ API connected';
+    document.getElementById('apiStatus').textContent='&#10003; API connected';
     document.getElementById('apiStatus').className='api-status pass';
   } else {
     document.getElementById("gErr").style.display="block";
@@ -397,10 +398,10 @@ function resizeImage(b64,mime,tw,th){
       const targetAR=tw/th, srcAR=sw/sh;
       let sx=0,sy=0,cw=sw,ch=sh;
       if(srcAR>targetAR){
-        // source is wider — crop sides
+        // source is wider &mdash; crop sides
         cw=Math.round(sh*targetAR);sx=Math.round((sw-cw)/2);
       } else if(srcAR<targetAR){
-        // source is taller — crop top/bottom
+        // source is taller &mdash; crop top/bottom
         ch=Math.round(sw/targetAR);sy=Math.round((sh-ch)/2);
       }
       const c=document.createElement("canvas");
@@ -427,7 +428,7 @@ function buildPrompt(userText){
   return p;
 }
 
-// Determine image size — use 2K for A+ content to meet minimum 1464px width
+// Determine image size &mdash; use 2K for A+ content to meet minimum 1464px width
 function getImageSize(){
   const activeBtn=document.querySelector(".arb.on");
   const label=activeBtn?activeBtn.dataset.label:"";
@@ -501,7 +502,7 @@ async function generate(){
 
     // Post-process: crop/resize to exact pixel dimensions if set
     if(targetDims){
-      ptx.textContent="Resizing to "+targetDims.w+"×"+targetDims.h+"...";
+      ptx.textContent="Resizing to "+targetDims.w+"&times;"+targetDims.h+"...";
       const resized=await resizeImage(finalB64,finalMime,targetDims.w,targetDims.h);
       finalB64=resized.b64;
       finalMime="image/png";
@@ -517,7 +518,7 @@ async function generate(){
       img.src=imgSrc;curUrl=imgSrc;
       img.classList.add("v");
       addHist(imgSrc,prompt);
-      toast("Image generated! "+(targetDims?targetDims.w+"×"+targetDims.h:""),"ok");
+      toast("Image generated! "+(targetDims?targetDims.w+"&times;"+targetDims.h:""),"ok");
     },400);
   }catch(e){
     clearInterval(pi);ov.classList.remove("on");bar.style.width="0%";
