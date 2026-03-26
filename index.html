@@ -528,6 +528,27 @@ async function generate(){
   btn.classList.remove("ld");btn.disabled=false;
 }
 
+// Compress image before sending for edit — keeps payload under Netlify's 6MB limit
+async function compressForEdit(b64, mime){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1024;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){
+        if(w>h){h=Math.round(h*MAX/w);w=MAX;}
+        else{w=Math.round(w*MAX/h);h=MAX;}
+      }
+      const c=document.createElement("canvas");
+      c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      const dataUrl=c.toDataURL("image/jpeg",0.85);
+      resolve({b64:dataUrl.split(",")[1],mime:"image/jpeg"});
+    };
+    img.src="data:"+mime+";base64,"+b64;
+  });
+}
+
 // Edit image
 async function editImg(){
   const editText=document.getElementById("edIn").value.trim();
@@ -550,13 +571,14 @@ async function editImg(){
 
   try{
     const lastEdit=editHistory[editHistory.length-1];
+    const compressed=await compressForEdit(lastEdit.b64,lastEdit.mime||"image/png");
     const resp=await fetch(PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         prompt:editText,
-        imageData:lastEdit.b64,
-        mimeType:lastEdit.mime||"image/png",
+        imageData:compressed.b64,
+        mimeType:compressed.mime,
         model:model,
         userName:document.getElementById("uName").value||"unknown",
         clientName:document.getElementById("cName").value||"unknown",
